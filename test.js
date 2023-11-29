@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         题库自动填充答案
 // @namespace    your-namespace
-// @version      1.0
+// @version      1.2
 // @description  从题库中自动填充答案到页面中的题目上
-// @match        https://labsafetest.uestc.edu.cn/*  
+// @match        https://labsafetest.uestc.edu.cn/*
 // @grant        none
 // ==/UserScript==
 
@@ -39,7 +39,80 @@
     }
   }
 
+
+  function get_index(answer, inputs_num) {
+    if (answer.includes("A")) {
+      return 0
+    }
+    if (answer.includes("B")) {
+      return 1
+    }
+    if (answer.includes("C")) {
+      return 2
+    }
+    if (answer.includes("D")) {
+      return 3
+    }
+    if (answer.includes("正确")) {
+      return 0
+    }
+    if (answer.includes("错误")) {
+      return 1
+    }
+    return Math.round(Math.random() * (inputs_num - 1))
+  }
+
+  function autoChoice() {
+    // 查找id为dati的form
+    var form = document.getElementById('dati');
+    // 查找form中的所有class为shiti的div
+    var shitis = form.getElementsByClassName('shiti');
+    // 遍历每一个div
+    for (var i = 0; i < shitis.length; i++) {
+      // 获得答案，答案在p标签中
+      var answer = shitis[i].getElementsByTagName('p')[0].innerHTML;
+      // 查找所有的input
+      var inputs = shitis[i].getElementsByTagName('input');
+      // 根据答案选择input
+      var index = get_index(answer, inputs.length)
+      // 勾选对应的input
+      inputs[index].checked = true
+    }
+  }
+
+  function nextPage() {
+    // 获取div元素
+    var divElement = document.querySelector('.nav');
+    for (var i = 0; i < divElement.childNodes.length; i++) {
+      // 获取文本节点
+      var textNode = divElement.childNodes[i];
+      // 获取文本内容
+      var textContent = textNode.textContent.trim();
+      // 使用正则表达式匹配页码信息
+      var regex = /第(\d+) \/ (\d+) 页/;
+      var match = textContent.match(regex);
+      // 如果匹配成功,则跳出循环
+      if (match) {
+        break;
+      }
+    }
+    // 提取当前页码和总页数
+    var currentPage = parseInt(match[1]);
+    var totalPages = parseInt(match[2]);
+    // 如果当前页码小于总页数,则点击下一页按钮
+    if (currentPage < totalPages) {
+      // 查找下一页按钮,input标签的value属性为下一页
+      var nextButton = document.querySelector('input[value="下一页"]');
+      nextButton.click();
+    }
+    else {
+      alert('答题完毕，请注意不保证答案正确，请确认后自行提交答卷！')
+    }
+  }
+
   setAnswer();
+  autoChoice();
+  nextPage();
 
 
 })();
