@@ -7,7 +7,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 
-driver_path = "../msedgedriver.exe"
+driver_path = "./msedgedriver.exe"
 op = Options()
 op.add_argument('log-level=3')  # 隐藏日志
 op.add_argument('--headless')  # 无头模式
@@ -54,23 +54,10 @@ def get_answer(link):
             question = strs[2]
             answer = strs[4][-2:]
         elif strs[1] == "[单选题]":
-            li = div.find("li")
-            ind = 4
-            # 一个一个选项数
-            for s in ["A.", "B.", "C.", "D."]:
-                if s in li.text:
-                    ind += 1
-            # 再数一遍br标签
-            br_len = len(li.find_all("br"))
-            ind = min(ind, 4+br_len+1)
-            # 找到答案编号
-            for i in range(len(strs[ind]) - 1, -1, -1):
-                if strs[ind][i] in ["A", "B", "C", "D"]:
-                    ans = strs[ind][i]
-                    break
-            answer = strs[ans_map[ans]]
+            index = strs[-1].find("标准答案：")
+            answer = strs[-1][index + 5:].strip()
             question = strs[2]
-        item = "题目：" + question + "  答案：" + answer
+        item = "题目：" + question + "^*^答案：" + answer
         # 判断题库中是否已经有该题目
         if item in BANK:
             continue
@@ -88,7 +75,7 @@ for tiku in tikus:
         if not flag:
             break
 
-with open("题库.txt", "w", encoding="utf-8") as file:
+with open("bank.txt", "w", encoding="utf-8") as file:
     for item in BANK:
         file.write(item + "\n")
 
